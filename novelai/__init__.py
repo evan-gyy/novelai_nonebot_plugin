@@ -105,17 +105,22 @@ def parse_image(key: str):
 async def _(bot: Bot,
             event: MessageEvent,
             state: T_State,
-            prompt: str = ArgStr("prompt"),
+            text: str = ArgStr("prompt"),
             img: Message = Arg("img")
 ):
     url = get_message_img(img)[0]
     temp = io.BytesIO(requests.get(url).content)
     img = Image.open(temp)
-    # logger.info(img, type(img))
+    logger.info(img.size)
+    if "||" in text and text.count("||") == 1:
+        prompt, negative_prompt = text.split("||")
+    else:
+        prompt = text
+        negative_prompt = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry"
     await novel_i2i.send("少女绘画中...")
     try:
         start = time.time()
-        image, path = nv.img2img(path=img, prompt=prompt)
+        image, path = nv.img2img(path=img, prompt=prompt, negative_prompt=negative_prompt)
         img_bytes = img2bytes(image)
         end = time.time()
         time_delta = str(round(end - start, 2)) + "s"
